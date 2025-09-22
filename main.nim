@@ -18,7 +18,8 @@ type
         value*: Option[string]
         children*: seq[AstNode]
 
-var code: string = "(print \"hola mundo\" ( \"que tal\"))"
+var code: string = "(print (\"lista de\" (\"textos\")))"
+var code2: string = "(print \"hola mundo\")"
 
 proc lex(code:string): seq[Token] =
     var counter: int = 0
@@ -88,6 +89,26 @@ proc parse(tokens: seq[Token]): AstNode =
 
     return parseExpr(tokens)
 
+proc interpretAst(ast: AstNode) = 
+    var counter: int = 0
+
+    proc printNode(node: AstNode) = 
+        if node.kind == "string":
+            echo node.value.get()
+        elif node.kind == "list":
+            for i in node.children:
+                printNode(i)
+        else:
+            echo "Lisnim (Syntax Error): You cannot print this!"
+
+    while counter < ast.children.len:
+        if ast.children[counter].kind == "symbol":
+            if ast.children[counter].value == some("print"):
+                printNode(ast.children[counter + 1])
+                counter.inc()
+
+        counter.inc()
+
 let ast = parse(lex(code))
 
-echo ast
+interpretAst(ast)
