@@ -1,11 +1,16 @@
-import options
-import unicode
+import options, unicode, strutils
 
 var T_LPAREN: string = "LPAREN"
 var T_RPAREN: string = "RPAREN"
 
 var T_SYMBOL: string = "SYMBOL"
 var T_STRING: string = "STRING"
+var T_NUMBER: string = "NUMBER"
+
+var N_LIST: string = "list"
+var N_NUMBER: string = "number"
+var N_SYMBOL: string = "symbol"
+var N_STRING: string = "string"
 
 type
     Token* = object
@@ -20,6 +25,7 @@ type
 
 var code: string = "(print (\"lista de\" (\"textos\")))"
 var code2: string = "(print \"hola mundo\")"
+var code3: string = "(print (235 2 \"hola\"))"
 
 proc lex(code:string): seq[Token] =
     var counter: int = 0
@@ -60,6 +66,15 @@ proc lex(code:string): seq[Token] =
             tokenList.add(Token(tokenType: some(T_STRING), value: some(stringToken)))
 
             counter.inc()
+        elif isDigit(code[counter]):
+            var numberString: string = ""
+
+            while isDigit(code[counter]):
+                numberString = numberString & code[counter]
+                counter.inc()
+
+            tokenList.add(Token(tokenType: some(T_NUMBER), value: some(numberString)))
+            continue
         else:
             counter.inc()
             continue
@@ -79,10 +94,10 @@ proc parse(tokens: seq[Token]): AstNode =
                 children.add(parseExpr(tokens))
 
             counter.inc()
-            return AstNode(kind: "list", value: none(string), children: children)
+            return AstNode(kind: N_LIST, value: none(string), children: children)
         else:
             let value = tokens[counter].value.get()
-            let kind = if tokens[counter].tokenType.get() == T_STRING: "string" else: "symbol"
+            let kind = if tokens[counter].tokenType.get() == T_STRING: N_STRING elif tokens[counter].tokenType.get() == T_NUMBER: N_NUMBER else: N_SYMBOL
             counter.inc()
 
             return AstNode(kind: kind, value: some(value), children: @[])
@@ -93,9 +108,11 @@ proc interpretAst(ast: AstNode) =
     var counter: int = 0
 
     proc printNode(node: AstNode) = 
-        if node.kind == "string":
+        if node.kind == N_STRING:
             echo node.value.get()
-        elif node.kind == "list":
+        elif node.kind == N_NUMBER:
+            echo node.value.get()
+        elif node.kind == N_LIST:
             for i in node.children:
                 printNode(i)
         else:
@@ -109,6 +126,6 @@ proc interpretAst(ast: AstNode) =
 
         counter.inc()
 
-let ast = parse(lex(code))
+let ast = parse(lex(code3))
 
 interpretAst(ast)
