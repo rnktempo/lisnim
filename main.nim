@@ -26,6 +26,10 @@ type
 var code: string = "(print (\"lista de\" (\"textos\")))"
 var code2: string = "(print \"hola mundo\")"
 var code3: string = "(print (235 2 \"hola\"))"
+var code4: string = "(print (+ 2 (+ 2 (+ 2 2))))"
+var code5: string = "(print (- 4 (- 7 1)))"
+var code6: string = "(print (+ 2 (- 8 4)))"
+var code7: string = "(print (- 8 (+ 2 (+ 4 (- 8 2)))))" # 8 - (2 + (4 + (8 - 2))) = -4
 
 proc lex(code:string): seq[Token] =
     var counter: int = 0
@@ -44,10 +48,10 @@ proc lex(code:string): seq[Token] =
             tokenList.add(Token(tokenType: some(T_RPAREN), value: none(string)))
             counter.inc()
             continue
-        elif isAlpha(Rune(code[counter])):
+        elif isAlpha(Rune(code[counter])) or code[counter] in {'+', '-'}:
             var symbol: string = ""
 
-            while isAlpha(Rune(code[counter])):
+            while isAlpha(Rune(code[counter])) or code[counter] in {'+', '-'}:
                 symbol = symbol & code[counter]
                 counter.inc()
 
@@ -107,14 +111,30 @@ proc parse(tokens: seq[Token]): AstNode =
 proc interpretAst(ast: AstNode) = 
     var counter: int = 0
 
+    proc evalArithmeticCalc(node: AstNode): int =   
+        if node.kind == N_NUMBER:
+            return parseInt(node.value.get())
+        if node.kind == N_LIST:
+            var op: string = node.children[0].value.get()
+            var num1: int = evalArithmeticCalc(node.children[1])
+            var num2: int = evalArithmeticCalc(node.children[2])
+
+            if op == "+":
+                return num1 + num2
+            elif op == "-":
+                return num1 - num2
+
     proc printNode(node: AstNode) = 
         if node.kind == N_STRING:
             echo node.value.get()
         elif node.kind == N_NUMBER:
             echo node.value.get()
         elif node.kind == N_LIST:
-            for i in node.children:
-                printNode(i)
+            if node.children[0].value.get() == "+" or node.children[0].value.get() == "-":
+                echo evalArithmeticCalc(node)
+            else:
+                for i in node.children:
+                    printNode(i)
         else:
             echo "Lisnim (Syntax Error): You cannot print this!"
 
@@ -126,6 +146,5 @@ proc interpretAst(ast: AstNode) =
 
         counter.inc()
 
-let ast = parse(lex(code3))
-
+let ast = parse(lex(code7))
 interpretAst(ast)
