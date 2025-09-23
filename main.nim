@@ -1,4 +1,4 @@
-import options, unicode, strutils
+import options, unicode, strutils, math
 
 var T_LPAREN: string = "LPAREN"
 var T_RPAREN: string = "RPAREN"
@@ -30,6 +30,7 @@ var code4: string = "(print (+ 2 (+ 2 (+ 2 2))))"
 var code5: string = "(print (- 4 (- 7 1)))"
 var code6: string = "(print (+ 2 (- 8 4)))"
 var code7: string = "(print (- 8 (+ 2 (+ 4 (- 8 2)))))" # 8 - (2 + (4 + (8 - 2))) = -4
+var code8: string = "(print (* 8 (/ 16 2)))"
 
 proc lex(code:string): seq[Token] =
     var counter: int = 0
@@ -48,10 +49,10 @@ proc lex(code:string): seq[Token] =
             tokenList.add(Token(tokenType: some(T_RPAREN), value: none(string)))
             counter.inc()
             continue
-        elif isAlpha(Rune(code[counter])) or code[counter] in {'+', '-'}:
+        elif isAlpha(Rune(code[counter])) or code[counter] in {'+', '-', '*', '/'}:
             var symbol: string = ""
 
-            while isAlpha(Rune(code[counter])) or code[counter] in {'+', '-'}:
+            while isAlpha(Rune(code[counter])) or code[counter] in {'+', '-', '*', '/'}:
                 symbol = symbol & code[counter]
                 counter.inc()
 
@@ -123,6 +124,10 @@ proc interpretAst(ast: AstNode) =
                 return num1 + num2
             elif op == "-":
                 return num1 - num2
+            elif op == "*":
+                return num1 * num2
+            elif op == "/":
+                return int(round(num1 / num2))
 
     proc printNode(node: AstNode) = 
         if node.kind == N_STRING:
@@ -130,7 +135,7 @@ proc interpretAst(ast: AstNode) =
         elif node.kind == N_NUMBER:
             echo node.value.get()
         elif node.kind == N_LIST:
-            if node.children[0].value.get() == "+" or node.children[0].value.get() == "-":
+            if node.children[0].value.get() == "+" or node.children[0].value.get() == "-" or node.children[0].value.get() == "*" or node.children[0].value.get() == "/":
                 echo evalArithmeticCalc(node)
             else:
                 for i in node.children:
@@ -146,5 +151,5 @@ proc interpretAst(ast: AstNode) =
 
         counter.inc()
 
-let ast = parse(lex(code7))
+let ast = parse(lex(code8))
 interpretAst(ast)
