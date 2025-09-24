@@ -32,6 +32,9 @@ var code6: string = "(print (+ 2 (- 8 4)))"
 var code7: string = "(print (- 8 (+ 2 (+ 4 (- 8 2)))))" # 8 - (2 + (4 + (8 - 2))) = -4
 var code8: string = "(print (* 8 (/ 16 2)))"
 
+var code9: string = "((var textVariable string "hello world") (print textVariable))" #goal
+var code10: string = "((var age int 16) (print (age + 1)))" #goal
+
 proc lex(code:string): seq[Token] =
     var counter: int = 0
     var tokenList: seq[Token] = @[]
